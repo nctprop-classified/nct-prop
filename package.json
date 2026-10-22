@@ -1,0 +1,31 @@
+{
+  "name": "nctprop-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev:web": "npm --workspace=web run dev",
+    "dev:api": "npm --workspace=api run dev",
+    "build:shared": "npm --workspace=shared run build",
+    "build:web": "npm --workspace=web run build",
+    "build:api": "npm --workspace=api run build",
+    "build": "npm run build:shared && npm run build:web",
+    "db:migrate:local": "npm --workspace=api run db:migrate:local",
+    "db:seed:local": "npm --workspace=api run db:seed:local"
+  },
+  "keywords": [
+    "nctprop",
+    "delhi-ncr",
+    "real-estate",
+    "classifieds",
+    "cloudflare-workers",
+    "cloudflare-pages"
+  ],
+  "author": "NCTprop Team",
+  "license": "MIT"
+}
