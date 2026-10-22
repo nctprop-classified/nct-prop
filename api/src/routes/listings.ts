@@ -182,6 +182,14 @@ listingsRoute.post('/', requireAuth(), async (c) => {
     return c.json({ success: false, error: 'Missing required listing fields.' }, 400);
   }
 
+  // Strict Photo Limit Enforcement (Free Tier: Max 5 Photos)
+  if (Array.isArray(images) && images.length > 5) {
+    return c.json({ 
+      success: false, 
+      error: 'Free tier limit exceeded: Maximum 5 photos allowed per property listing.' 
+    }, 400);
+  }
+
   const listingId = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const now = Math.floor(Date.now() / 1000);
   const expiresAt = now + (45 * 86400); // 45 days default expiry
@@ -241,9 +249,9 @@ listingsRoute.post('/', requireAuth(), async (c) => {
     expiresAt
   ).run();
 
-  // Insert images
+  // Insert images (Strictly capped at 5 photos)
   if (Array.isArray(images) && images.length > 0) {
-    for (let i = 0; i < Math.min(images.length, 10); i++) {
+    for (let i = 0; i < Math.min(images.length, 5); i++) {
       const imgUrl = typeof images[i] === 'string' ? images[i] : images[i].url;
       if (imgUrl) {
         const imgId = `img_${Date.now()}_${i}`;

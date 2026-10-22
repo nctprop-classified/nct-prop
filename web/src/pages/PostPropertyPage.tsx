@@ -55,13 +55,26 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    setUploading(true);
     setErrorMessage('');
 
+    const remainingSlots = 5 - uploadedImages.length;
+    if (remainingSlots <= 0) {
+      setErrorMessage('You have already reached the maximum limit of 5 photos for this listing.');
+      return;
+    }
+
+    const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length > remainingSlots) {
+      setErrorMessage(`Only ${remainingSlots} more photo(s) can be added (Maximum 5 photos per listing).`);
+    }
+
+    const filesToUpload = selectedFiles.slice(0, remainingSlots);
+    setUploading(true);
+
     try {
-      const files = Array.from(e.target.files).slice(0, 5 - uploadedImages.length);
-      for (const file of files) {
+      for (const file of filesToUpload) {
         const originalSize = file.size;
+        // Client-side WebP compression (< 300KB)
         const uploadResult = await compressAndUploadImage(file, undefined, getAuthHeaders());
         setUploadedImages((prev) => [
           ...prev,
@@ -69,7 +82,7 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
             url: uploadResult.url,
             key: uploadResult.key,
             originalSize,
-            compressedSize: Math.round(originalSize * 0.15) // Approximate compressed size in WebP
+            compressedSize: Math.round(originalSize * 0.15)
           }
         ]);
       }
@@ -77,6 +90,8 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
       setErrorMessage(err.message || 'Image upload failed. Please try again.');
     } finally {
       setUploading(false);
+      // Reset input value so same files can be re-selected if deleted
+      e.target.value = '';
     }
   };
 
@@ -119,7 +134,7 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
       phone: `91${contactPhone.replace(/[^0-9]/g, '').slice(-10)}`,
       whatsapp_number: `91${contactPhone.replace(/[^0-9]/g, '').slice(-10)}`,
       contact_name: contactName,
-      images: uploadedImages.map((img) => img.url)
+      images: uploadedImages.slice(0, 5).map((img) => img.url)
     };
 
     try {
@@ -527,22 +542,37 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
             {/* Photos upload with client-side compression */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold text-slate-700">Property Photos (Up to 5 images)</label>
-                <span className="text-[11px] text-slate-400">Automatic WebP compression active</span>
+                <div className="flex items-center space-x-2">
+                  <label className="block text-xs font-bold text-slate-800">
+                    Property Photos ({uploadedImages.length}/5)
+                  </label>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    uploadedImages.length === 5 
+                      ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {uploadedImages.length === 5 ? 'Max 5 reached' : `${5 - uploadedImages.length} slots left`}
+                  </span>
+                </div>
+                <span className="text-[11px] text-brand-600 font-semibold">WebP Auto-Compression Active</span>
               </div>
 
+              <p className="text-[11px] text-slate-500 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <strong>Recommended 5 photos:</strong> 1 Living Room, 1-2 Bedrooms, 1 Modular Kitchen, 1 Bathroom, 1 Balcony/Exterior view.
+              </p>
+
               {/* Upload Dropzone */}
-              {uploadedImages.length < 5 && (
+              {uploadedImages.length < 5 ? (
                 <label className="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-brand-50/40 transition-colors">
                   {uploading ? (
                     <div className="flex flex-col items-center space-y-2">
                       <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
-                      <span className="text-xs font-semibold text-slate-600">Compressing & Uploading to R2...</span>
+                      <span className="text-xs font-semibold text-slate-600">Compressing to WebP & Uploading...</span>
                     </div>
                   ) : (
                     <>
                       <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                      <span className="text-xs font-bold text-slate-700">Click to upload photos</span>
+                      <span className="text-xs font-bold text-slate-700">Click to upload photos ({5 - uploadedImages.length} remaining)</span>
                       <span className="text-[11px] text-slate-400 mt-0.5">JPEG, PNG, WebP automatically optimized</span>
                     </>
                   )}
@@ -555,6 +585,11 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
                     className="hidden"
                   />
                 </label>
+              ) : (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-800">
+                  <span className="font-bold">✓ Maximum 5 photos added for this listing (Free tier limit)</span>
+                  <span className="text-[11px] text-emerald-600">Remove an image below if you want to replace it</span>
+                </div>
               )}
 
               {/* Uploaded Previews Grid */}
