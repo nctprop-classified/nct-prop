@@ -9,11 +9,12 @@
   ],
   "scripts": {
     "install:all": "npm install",
-"dev:web": "npm --workspace=@nctprop/web run dev",
+    "dev:web": "npm --workspace=@nctprop/web run dev",
     "dev:api": "npm --workspace=@nctprop/api run dev",
     "build:shared": "npm --workspace=@nctprop/shared run build",
     "build:web": "npm --workspace=@nctprop/web run build",
     "build:api": "npm --workspace=@nctprop/api run build",
+    "build": "npm run build:shared && npm run build:web",
     "db:migrate:local": "npm --workspace=@nctprop/api run db:migrate:local",
     "db:seed:local": "npm --workspace=@nctprop/api run db:seed:local"
   },
