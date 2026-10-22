@@ -103,10 +103,36 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500">
+        <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <p>© {new Date().getFullYear()} NCTprop.com. All rights reserved. Made for Delhi-NCR.</p>
-          <p className="mt-2 sm:mt-0 flex items-center space-x-1">
-            <span>Serverless on Cloudflare Workers & D1</span>
+
+          {/* GrowthMachine Studio Credit Badge */}
+          <div>
+            <a
+              href="https://www.growthmachinestudio.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Web Design Company in Delhi | GrowthMachine Studio"
+              className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/95 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/50 shadow-md hover:shadow-emerald-950/30 transition-all duration-200"
+            >
+              {/* Pulsing / Blinking Circle */}
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+
+              <span className="text-[11px] font-medium text-slate-300 group-hover:text-white transition-colors tracking-wide">
+                Designed by{' '}
+                <span className="font-bold text-emerald-400 group-hover:text-emerald-300">
+                  GrowthMachine Studio
+                </span>
+              </span>
+              <span className="text-amber-400 text-xs group-hover:scale-125 transition-transform">⚡</span>
+            </a>
+          </div>
+
+          <p className="flex items-center space-x-1">
+            <span>Serverless on Cloudflare</span>
             <span className="text-slate-600">•</span>
             <span className="flex items-center text-brand-400">
               <Heart className="w-3 h-3 text-rose-500 inline mx-1 fill-rose-500" /> Free for all users
