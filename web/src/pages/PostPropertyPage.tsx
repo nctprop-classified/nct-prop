@@ -6,6 +6,7 @@ import {
 import { DELHI_NCR_CITIES, getLocalitiesByCity, formatPriceINR } from '@nctprop/shared';
 import { useAuth } from '../lib/auth';
 import { createListing, compressAndUploadImage } from '../lib/api';
+import { LocationPicker } from '../components/LocationPicker';
 
 interface PostPropertyPageProps {
   onNavigate: (page: string, params?: any) => void;
@@ -317,17 +318,25 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
 
             {/* Locality / Sector */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Sector / Locality *</label>
-              <select
-                value={locality}
-                onChange={(e) => setLocality(e.target.value)}
-                className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800"
-              >
-                <option value="">Select Locality / Sector</option>
-                {localities.map((loc) => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700">Sector / Locality *</label>
+                <span className="text-[11px] text-brand-600 font-semibold">Search or type any area</span>
+              </div>
+              <LocationPicker
+                selectedCity={city}
+                selectedLocality={locality}
+                onSelect={(detectedCity, newLocality) => {
+                  if (detectedCity) setCity(detectedCity);
+                  setLocality(newLocality);
+                }}
+                placeholder="Search or type locality (e.g. Chander Vihar, Sector 62)..."
+                allowCustom={true}
+              />
+              {locality && (
+                <p className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center space-x-1">
+                  <span>Selected: <strong>{locality}</strong> ({city})</span>
+                </p>
+              )}
             </div>
 
             {/* Society / Colony */}

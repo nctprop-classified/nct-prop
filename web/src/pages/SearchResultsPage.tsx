@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Filter, SlidersHorizontal, MapPin, Building, ShieldCheck, X, RotateCcw } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
 import { AdSlot } from '../components/AdSlot';
+import { LocationPicker } from '../components/LocationPicker';
 import { DELHI_NCR_CITIES, Listing, ListingFilter, getLocalitiesByCity } from '@nctprop/shared';
 import { fetchListings } from '../lib/api';
 
@@ -177,22 +178,23 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ initialFil
             </select>
           </div>
 
-          {/* Locality */}
-          {localities.length > 0 && (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Sector / Locality</label>
-              <select
-                value={filters.locality || ''}
-                onChange={(e) => updateFilter('locality', e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-800 py-2.5 px-3 rounded-xl focus:ring-2 focus:ring-brand-500"
-              >
-                <option value="">All Sectors</option>
-                {localities.map((loc) => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          {/* Locality Search Picker */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Sector / Locality</label>
+            <LocationPicker
+              selectedCity={filters.city || ''}
+              selectedLocality={filters.locality || ''}
+              onSelect={(city, locality) => {
+                if (city && (!filters.city || filters.city === 'All Delhi-NCR')) {
+                  updateFilter('city', city);
+                  onCityChange(city);
+                }
+                updateFilter('locality', locality || undefined);
+              }}
+              placeholder="e.g. Chander Vihar, Sector 62..."
+              allowCustom={true}
+            />
+          </div>
 
           {/* Bedrooms / BHK */}
           <div>
@@ -336,6 +338,23 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ initialFil
                     <option key={c.name} value={c.name}>{c.displayName}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Locality</label>
+                <LocationPicker
+                  selectedCity={filters.city || ''}
+                  selectedLocality={filters.locality || ''}
+                  onSelect={(city, locality) => {
+                    if (city && (!filters.city || filters.city === 'All Delhi-NCR')) {
+                      updateFilter('city', city);
+                      onCityChange(city);
+                    }
+                    updateFilter('locality', locality || undefined);
+                  }}
+                  placeholder="e.g. Chander Vihar, Sector 62..."
+                  allowCustom={true}
+                />
               </div>
 
               <div>

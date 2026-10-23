@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Building, ShieldCheck, ArrowRight, Home, Sparkles, CheckCircle2, ChevronRight, Zap } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
 import { AdSlot } from '../components/AdSlot';
+import { LocationPicker } from '../components/LocationPicker';
 import { DELHI_NCR_CITIES, Listing, getLocalitiesByCity } from '@nctprop/shared';
 import { fetchListings } from '../lib/api';
 
@@ -130,22 +131,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, selectedCity, on
                 </div>
               </div>
 
-              {/* Locality Dropdown / Filter */}
+              {/* Locality Search Picker */}
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1">Sector / Locality</label>
-                <div className="relative">
-                  <Building className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
-                  <select
-                    value={searchLocality}
-                    onChange={(e) => setSearchLocality(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="">All Sectors & Localities</option>
-                    {localitiesForSelected.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
+                <LocationPicker
+                  selectedCity={searchCity}
+                  selectedLocality={searchLocality}
+                  onSelect={(detectedCity, newLocality) => {
+                    if (detectedCity) setSearchCity(detectedCity);
+                    setSearchLocality(newLocality);
+                  }}
+                  placeholder="e.g. Chander Vihar, Sector 62..."
+                  allowCustom={true}
+                />
               </div>
 
               {/* BHK Filter */}
