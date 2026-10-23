@@ -13,9 +13,5 @@ database_name = "nctprop-db"
 database_id = "08c7ae2c-6993-44d2-b9cc-13139365e4e8"
 migrations_dir = "api/migrations"
 
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "nctprop-images"
-
 [vars]
 ENVIRONMENT = "production"

@@ -23,21 +23,34 @@ uploadRoute.post('/', async (c) => {
 
       const extension = file.name.split('.').pop() || 'webp';
       const key = `properties/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
-      
-      const bucket = c.env.BUCKET;
-      if (bucket) {
+      const arrayBuffer = await file.arrayBuffer();
+
+      // 1. Try Workers KV first (100% Free, NO credit card needed)
+      if (c.env.IMAGES_KV) {
         try {
-          // Upload to Cloudflare R2
-          await bucket.put(key, await file.arrayBuffer(), {
+          await c.env.IMAGES_KV.put(key, arrayBuffer, {
+            metadata: { contentType: file.type || 'image/webp' }
+          });
+          return c.json({
+            success: true,
+            url: `/api/images/${key}`,
+            key
+          });
+        } catch (kvErr: any) {
+          console.warn('Workers KV put failed, falling back:', kvErr);
+        }
+      }
+
+      // 2. Try Cloudflare R2 if available
+      if (c.env.BUCKET) {
+        try {
+          await c.env.BUCKET.put(key, arrayBuffer, {
             httpMetadata: {
               contentType: file.type || 'image/webp'
             }
           });
-
-          // If a custom R2 public domain is configured, use it; otherwise use the direct Worker proxy
           const publicDomain = c.env.R2_PUBLIC_DOMAIN;
           const imageUrl = publicDomain ? `${publicDomain}/${key}` : `/api/images/${key}`;
-
           return c.json({
             success: true,
             url: imageUrl,
@@ -48,9 +61,8 @@ uploadRoute.post('/', async (c) => {
         }
       }
 
-      // Safe fallback: Convert to data URI for direct embedding
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
+      // 3. Resilient fallback: Convert to Data URI (Stored in D1 database, 5 GB free, zero card needed)
+      const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
       for (let i = 0; i < bytes.byteLength; i++) {
         binary += String.fromCharCode(bytes[i]);

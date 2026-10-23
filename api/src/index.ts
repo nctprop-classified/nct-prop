@@ -47,26 +47,42 @@ app.get('/api/health', (c) => {
   });
 });
 
-// Serve R2 images directly through Cloudflare Worker edge cache
+// Serve images directly from Workers KV or R2 through Cloudflare edge cache
 app.get('/api/images/*', async (c) => {
   const key = c.req.path.replace(/^\/api\/images\//, '');
-  const bucket = c.env.BUCKET;
-  if (!bucket) {
-    return c.text('Image storage bucket not configured', 404);
-  }
-  try {
-    const object = await bucket.get(key);
-    if (!object) {
-      return c.text('Image not found', 404);
+
+  // 1. Check Workers KV (No credit card needed)
+  if (c.env.IMAGES_KV) {
+    try {
+      const { value, metadata } = await c.env.IMAGES_KV.getWithMetadata<{ contentType?: string }>(key, 'arrayBuffer');
+      if (value) {
+        const headers = new Headers();
+        headers.set('content-type', metadata?.contentType || 'image/webp');
+        headers.set('cache-control', 'public, max-age=31536000, immutable');
+        return new Response(value, { headers });
+      }
+    } catch (kvErr) {
+      console.warn('KV get error:', kvErr);
     }
-    const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set('etag', object.httpEtag);
-    headers.set('cache-control', 'public, max-age=31536000, immutable');
-    return new Response(object.body, { headers });
-  } catch (err: any) {
-    return c.text('Failed to retrieve image: ' + err.message, 500);
   }
+
+  // 2. Check Cloudflare R2 if available
+  if (c.env.BUCKET) {
+    try {
+      const object = await c.env.BUCKET.get(key);
+      if (object) {
+        const headers = new Headers();
+        object.writeHttpMetadata(headers);
+        headers.set('etag', object.httpEtag);
+        headers.set('cache-control', 'public, max-age=31536000, immutable');
+        return new Response(object.body, { headers });
+      }
+    } catch (err: any) {
+      console.warn('R2 get error:', err);
+    }
+  }
+
+  return c.text('Image not found', 404);
 });
 
 // Mount Routes

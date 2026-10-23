@@ -14,15 +14,8 @@
       "migrations_dir": "migrations"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "BUCKET",
-      "bucket_name": "nctprop-images"
-    }
-  ],
   "vars": {
     "ENVIRONMENT": "production",
-    "ALLOWED_ORIGINS": "https://nctprop.com,http://localhost:5173,http://localhost:3000",
-    "R2_PUBLIC_DOMAIN": "https://images.nctprop.com"
+    "ALLOWED_ORIGINS": "https://nctprop.com,http://localhost:5173,http://localhost:3000"
   }
 }
