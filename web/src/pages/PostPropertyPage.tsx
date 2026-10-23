@@ -107,6 +107,15 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
       return;
     }
 
+    const cleanPhone = contactPhone.replace(/[^0-9]/g, '').slice(-10);
+    const authHeaders = {
+      ...getAuthHeaders(),
+      'X-User-Id': user?.id || `usr_${cleanPhone}`,
+      'X-User-Name': user?.name || contactName || 'Property Owner',
+      'X-User-Phone': `91${cleanPhone}`,
+      'X-User-Role': user?.role || 'user'
+    };
+
     if (!user) {
       loginWithPhone(contactPhone, contactName || 'Property Owner');
     }
@@ -132,14 +141,14 @@ export const PostPropertyPage: React.FC<PostPropertyPageProps> = ({ onNavigate, 
       locality: locality || 'Main Sector',
       society_or_colony: society,
       address,
-      phone: `91${contactPhone.replace(/[^0-9]/g, '').slice(-10)}`,
-      whatsapp_number: `91${contactPhone.replace(/[^0-9]/g, '').slice(-10)}`,
-      contact_name: contactName,
+      phone: `91${cleanPhone}`,
+      whatsapp_number: `91${cleanPhone}`,
+      contact_name: contactName || 'Property Owner',
       images: uploadedImages.slice(0, 5).map((img) => img.url)
     };
 
     try {
-      const res = await createListing(payload, undefined, getAuthHeaders());
+      const res = await createListing(payload, undefined, authHeaders);
       if (res.success && res.id) {
         onSuccess(res.id);
       } else {
