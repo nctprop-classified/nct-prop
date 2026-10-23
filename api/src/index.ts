@@ -47,6 +47,28 @@ app.get('/api/health', (c) => {
   });
 });
 
+// Serve R2 images directly through Cloudflare Worker edge cache
+app.get('/api/images/*', async (c) => {
+  const key = c.req.path.replace(/^\/api\/images\//, '');
+  const bucket = c.env.BUCKET;
+  if (!bucket) {
+    return c.text('Image storage bucket not configured', 404);
+  }
+  try {
+    const object = await bucket.get(key);
+    if (!object) {
+      return c.text('Image not found', 404);
+    }
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('etag', object.httpEtag);
+    headers.set('cache-control', 'public, max-age=31536000, immutable');
+    return new Response(object.body, { headers });
+  } catch (err: any) {
+    return c.text('Failed to retrieve image: ' + err.message, 500);
+  }
+});
+
 // Mount Routes
 app.route('/api/cities', citiesRoute);
 app.route('/api/listings', listingsRoute);

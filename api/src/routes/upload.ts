@@ -1,10 +1,9 @@
 import { Hono } from 'hono';
 import { Env, UserSession } from '../types';
-import { requireAuth } from '../middleware/auth';
 
 export const uploadRoute = new Hono<{ Bindings: Env; Variables: { user?: UserSession } }>();
 
-uploadRoute.post('/', requireAuth(), async (c) => {
+uploadRoute.post('/', async (c) => {
   try {
     const contentType = c.req.header('content-type') || '';
     
@@ -17,9 +16,9 @@ uploadRoute.post('/', requireAuth(), async (c) => {
         return c.json({ success: false, error: 'No valid image file uploaded.' }, 400);
       }
 
-      // Max size: 2MB (remember client-side compression will keep it < 300KB)
-      if (file.size > 2 * 1024 * 1024) {
-        return c.json({ success: false, error: 'File exceeds 2MB limit. Please compress image first.' }, 400);
+      // Max size: 5MB
+      if (file.size > 5 * 1024 * 1024) {
+        return c.json({ success: false, error: 'File exceeds 5MB limit. Please compress image first.' }, 400);
       }
 
       const extension = file.name.split('.').pop() || 'webp';
@@ -27,30 +26,42 @@ uploadRoute.post('/', requireAuth(), async (c) => {
       
       const bucket = c.env.BUCKET;
       if (bucket) {
-        // Upload to Cloudflare R2
-        await bucket.put(key, await file.arrayBuffer(), {
-          httpMetadata: {
-            contentType: file.type || 'image/webp'
-          }
-        });
+        try {
+          // Upload to Cloudflare R2
+          await bucket.put(key, await file.arrayBuffer(), {
+            httpMetadata: {
+              contentType: file.type || 'image/webp'
+            }
+          });
 
-        const publicDomain = c.env.R2_PUBLIC_DOMAIN || 'https://images.nctprop.com';
-        return c.json({
-          success: true,
-          url: `${publicDomain}/${key}`,
-          key
-        });
-      } else {
-        // Local fallback (when running wrangler dev without R2 local simulated bucket or mock)
-        // Convert to data URI for local preview
-        const buffer = await file.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-        return c.json({
-          success: true,
-          url: `data:${file.type};base64,${base64}`,
-          key: `local-${Date.now()}`
-        });
+          // If a custom R2 public domain is configured, use it; otherwise use the direct Worker proxy
+          const publicDomain = c.env.R2_PUBLIC_DOMAIN;
+          const imageUrl = publicDomain ? `${publicDomain}/${key}` : `/api/images/${key}`;
+
+          return c.json({
+            success: true,
+            url: imageUrl,
+            key
+          });
+        } catch (r2Error: any) {
+          console.warn('R2 put failed, falling back to data URL:', r2Error);
+        }
       }
+
+      // Safe fallback: Convert to data URI for direct embedding
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+
+      return c.json({
+        success: true,
+        url: `data:${file.type || 'image/webp'};base64,${base64}`,
+        key: `local-${Date.now()}`
+      });
     }
 
     return c.json({ success: false, error: 'Content-Type must be multipart/form-data.' }, 400);

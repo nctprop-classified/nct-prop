@@ -1,8 +1,30 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nctprop",
+  "main": "api/src/index.ts",
   "compatibility_date": "2024-05-12",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "assets": {
-    "directory": "web/dist"
+    "directory": "web/dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nctprop-db",
+      "database_id": "nctprop-db-id",
+      "migrations_dir": "api/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "nctprop-images"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production"
   }
 }
