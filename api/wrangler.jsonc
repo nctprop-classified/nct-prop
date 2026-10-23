@@ -10,7 +10,7 @@
     {
       "binding": "DB",
       "database_name": "nctprop-db",
-      "database_id": "nctprop-db-id",
+      "database_id": "08c7ae2c-6993-44d2-b9cc-13139365e4e8",
       "migrations_dir": "migrations"
     }
   ],

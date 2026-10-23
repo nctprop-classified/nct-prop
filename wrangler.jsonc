@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nctprop",
+  "name": "nct-prop",
   "main": "api/src/index.ts",
   "compatibility_date": "2024-05-12",
   "compatibility_flags": [
@@ -14,7 +14,7 @@
     {
       "binding": "DB",
       "database_name": "nctprop-db",
-      "database_id": "nctprop-db-id",
+      "database_id": "08c7ae2c-6993-44d2-b9cc-13139365e4e8",
       "migrations_dir": "api/migrations"
     }
   ],
